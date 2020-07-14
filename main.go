@@ -92,8 +92,8 @@ func main() {
     acceptJsonServerMux.HandleFunc("/logs", server.acceptJson)
 
     go func() {
-        http.ListenAndServe("localhost:5000", acceptJsonServerMux)
+        http.ListenAndServe("0.0.0.0:5000", acceptJsonServerMux)
     }()
 
-    http.ListenAndServe("localhost:9102", promhttp.Handler())
+    http.ListenAndServe("0.0.0.0:9102", promhttp.Handler())
 }
