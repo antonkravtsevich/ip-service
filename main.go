@@ -1,10 +1,13 @@
 package main
 
-import "fmt"
-import "net/http"
-import "encoding/json"
-import "github.com/prometheus/client_golang/prometheus"
-import "github.com/prometheus/client_golang/prometheus/promhttp"
+import (
+	"fmt"
+	"net/http"
+	"encoding/json"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	log "github.com/sirupsen/logrus"
+)
 
 type Log struct{
 	Ip	string
@@ -45,6 +48,7 @@ func startIPsCounter(ipsCounter prometheus.Counter) chan <- string{
 
 			// if IP unique - add it to tree, increment counter
 			if unique {
+				log.Info("New unique IP added: ", newIp)
 				tree.insertBranch(newIpSplitted)
 				ipsCounter.Inc()
 			}
@@ -81,6 +85,8 @@ func main() {
 	server := Server{
 		ipsChan: ipsChan,
 	}
+
+	log.Info("Start service...")
 
 	acceptJsonServerMux := http.NewServeMux()
     acceptJsonServerMux.HandleFunc("/logs", server.acceptJson)
