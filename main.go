@@ -47,8 +47,8 @@ func startIPsCounter() chan <- Command{
 
 	// tree will be used as storage for all unique IPs
 	tree := Node{' ', []*Node{}}
-	// all IPs will be splitted in symbols, each symbol will be stored
-	// node in tree
+	// all unique IPs will be splitted in symbols, each symbol will be stored
+	// as node in tree
 	uniqueIpsCount := 0
 
 	commandsChannel := make(chan Command)
@@ -130,5 +130,5 @@ func main() {
         http.ListenAndServe("localhost:5000", acceptJsonServerMux)
     }()
 
-    http.ListenAndServe("localhost:9092", returnMetricServer)
+    http.ListenAndServe("localhost:9102", returnMetricServer)
 }
