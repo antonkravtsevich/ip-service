@@ -45,9 +45,10 @@ func isArrayContainValue(array []string, value string) bool{
 // calculate count of unique IPs 
 func startIPsCounter() chan <- Command{
 
-	// as a temporary solution, all unique IPs will be stored in list
-	// that will be used to check if received IP is unique or not
-	var uniqueIpsList []string
+	// tree will be used as storage for all unique IPs
+	tree := Node{' ', []*Node{}}
+	// all IPs will be splitted in symbols, each symbol will be stored
+	// node in tree
 	uniqueIpsCount := 0
 
 	commandsChannel := make(chan Command)
@@ -59,11 +60,15 @@ func startIPsCounter() chan <- Command{
 			// handle command for new IP adding
 			case AddIp:
 				newIp := command.payload
-				unique := !isArrayContainValue(uniqueIpsList, newIp)
 
-				// if IP unique - add it to list, increment counter
+				// split IP in symbols for further processing
+				newIpSplitted := []rune(newIp)
+				
+				unique := !tree.isBranchExists(newIpSplitted)
+
+				// if IP unique - add it to tree, increment counter
 				if unique {
-					uniqueIpsList = append(uniqueIpsList, newIp)
+					tree.insertBranch(newIpSplitted)
 					uniqueIpsCount += 1
 				}
 				command.responseChannel <- 0
