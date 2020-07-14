@@ -8,8 +8,43 @@ type Log struct{
 	Ip	string
 }
 
+
+type Server struct{
+	ipsChan chan<- string
+}
+
+func isArrayContainValue(array []string, value string) bool{
+	for _, element := range array{
+		if element == value {
+			return true
+		}
+	}
+	return false
+}
+
+func isIPUnique() chan <- string{
+	var uniqueIpsList []string
+	uniqueIpsCount := 0
+
+	ipsChan := make(chan string)
+
+	go func(){
+
+		for newIp := range ipsChan{
+			unique := !isArrayContainValue(uniqueIpsList, newIp)
+			if unique {
+				uniqueIpsList = append(uniqueIpsList, newIp)
+				uniqueIpsCount += 1
+				fmt.Printf("new unique IP! %v\n", newIp)
+			}
+		}
+	}()
+
+	return ipsChan
+}
+
 // Accept log record and extract IP address from it
-func acceptJson(w http.ResponseWriter, r *http.Request) {
+func (server *Server) acceptJson(w http.ResponseWriter, r *http.Request) {
 	var log Log
 
 	err := json.NewDecoder(r.Body).Decode(&log)
@@ -18,20 +53,27 @@ func acceptJson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, log.Ip)
+	server.ipsChan <- log.Ip
+
+	fmt.Fprintf(w, "ok")
 }
 
 // Provide Prometheus metrics 
-func returnMetric(w http.ResponseWriter, r *http.Request) {
+func (server *Server) returnMetric(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "ok")
 }
 
 func main() {
+	ipsChannel := isIPUnique()
+	server := Server{
+		ipsChan: ipsChannel,
+	}
+
 	acceptJsonServerMux := http.NewServeMux()
-    acceptJsonServerMux.HandleFunc("/logs", acceptJson)
+    acceptJsonServerMux.HandleFunc("/logs", server.acceptJson)
 
     returnMetricServer := http.NewServeMux()
-    returnMetricServer.HandleFunc("/metrics", returnMetric)
+    returnMetricServer.HandleFunc("/metrics", server.returnMetric)
 
     go func() {
         http.ListenAndServe("localhost:5000", acceptJsonServerMux)
